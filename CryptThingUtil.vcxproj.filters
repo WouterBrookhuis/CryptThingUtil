@@ -24,12 +24,39 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="FileStructs.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CryptThingUtil.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mbedtls\library\aes.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mbedtls\library\aesni.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mbedtls\library\sha256.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mbedtls\library\gcm.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mbedtls\library\cipher.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mbedtls\library\cipher_wrap.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mbedtls\library\md.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mbedtls\library\md_wrap.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
