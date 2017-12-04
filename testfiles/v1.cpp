@@ -117,24 +117,16 @@ int CTU_gcm_update(mbedtls_gcm_context *ctx,
 /**
 * \brief			Expand a password string into encryption keys
 */
-bool CTU_ExpandKey(std::string const &Key, void *Expanded, size_t Length, void *IV, size_t IVLength)
+bool CTU_ExpandKey(std::string const &Key, void *Expanded, size_t Length)
 {
 	size_t length = Key.length();
 	const unsigned char *c_key = (const unsigned char *)Key.c_str();
 	unsigned char buf[32];
-	// key_block = PRF(iv, "keyblock", SHA256(password), key_block_length)
+	// key_block = PRF(SHA256(password), "keyblock", SHA256(password), key_block_length)
 	mbedtls_sha256(c_key, length, buf, 0);
-	if (IVLength > 0 && IV != NULL) {
-		if (tls_prf_sha256((unsigned char *)IV, IVLength, "keyblock", buf, 32, (unsigned char *)Expanded, Length) != 0) {
-			return false;
-		}
+	if (tls_prf_sha256(buf, 32, "keyblock", buf, 32, (unsigned char *)Expanded, Length) != 0) {
+		return false;
 	}
-	else {
-		if (tls_prf_sha256(buf, 32, "keyblock", buf, 32, (unsigned char *)Expanded, Length) != 0) {
-			return false;
-		}
-	}
-
 	return true;
 }
 
@@ -396,7 +388,11 @@ bool CTU_DecryptFile(std::string const &InFile, std::string const &OutFile, std:
 	// 16 bit key, 16 bit IV
 	unsigned char keys[32];
 	unsigned char *iv = &keys[16];
-	size_t ivLength = 0;
+	if (!CTU_ExpandKey(Password, keys, 32)) {
+		in.close();
+		out.close();
+		return false;
+	}
 
 	// Read header
 	EFF_Header header;
@@ -414,14 +410,6 @@ bool CTU_DecryptFile(std::string const &InFile, std::string const &OutFile, std:
 	// Read IV
 	if (header.Identifier.Version >= 1) {
 		in.read((char *)iv, 16);
-		ivLength = 16;
-	}
-
-	// Generate encryption key
-	if (!CTU_ExpandKey(Password, keys, 32 - ivLength, iv, ivLength)) {
-		in.close();
-		out.close();
-		return false;
 	}
 
 	// Decrypt file
@@ -455,17 +443,17 @@ bool CTU_EncryptFile(std::string const &InFile, std::string const &OutFile, std:
 		return false;
 	}
 
-	// 16 bit IV
-	unsigned char iv[16];
-	if (!CTU_Platform_GetCryptRandom(iv, 16)) {
+	// 16 bit key
+	unsigned char keys[16];
+	if (!CTU_ExpandKey(Password, keys, 16)) {
 		in.close();
 		out.close();
 		return false;
 	}
 
-	// 16 bit key
-	unsigned char keys[16];
-	if (!CTU_ExpandKey(Password, keys, 16, iv, 16)) {
+	// 16 bit IV
+	unsigned char iv[16];
+	if (!CTU_Platform_GetCryptRandom(iv, 16)) {
 		in.close();
 		out.close();
 		return false;
@@ -543,9 +531,6 @@ int main()
 		if (std::getline(std::cin, input)) {
 			if (input.compare("exit") == 0) {
 				exit = true;
-			}
-			else if (input.length() == 0) {
-				std::cout << "Please enter a value\r\n";
 			}
 			else {
 				switch (state) {
